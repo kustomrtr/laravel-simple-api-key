@@ -2,14 +2,18 @@
 
 namespace Kustomrt\LaravelSimpleApiKey;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Kustomrt\LaravelSimpleApiKey\Console\Commands\GenerateApiKey;
+use Kustomrt\LaravelSimpleApiKey\Console\Commands\ListApiKeys;
 use Kustomrt\LaravelSimpleApiKey\Http\Middleware\LaravelSimpleApiKeyMiddleware;
 
 class LaravelSimpleApiKeyServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
+     * @throws BindingResolutionException
      */
     public function boot()
     {
@@ -25,6 +29,8 @@ class LaravelSimpleApiKeyServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/config.php' => config_path('laravel-simple-api-key.php'),
             ], 'config');
+
+            $this->registerMigrations();
 
             // Publishing the views.
             /*$this->publishes([
@@ -42,11 +48,13 @@ class LaravelSimpleApiKeyServiceProvider extends ServiceProvider
             ], 'lang');*/
 
             // Registering package commands.
-            // $this->commands([]);
+            $this->commands([
+                GenerateApiKey::class,
+                ListApiKeys::class
+            ]);
         }
 
-        $router = $this->app->make(Router::class);
-        $router->aliasMiddleware('auth.apikey', LaravelSimpleApiKeyMiddleware::class);
+        $this->configureMiddleware();
     }
 
     /**
@@ -54,15 +62,36 @@ class LaravelSimpleApiKeyServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // Automatically apply the package configuration
-        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'laravel-simple-api-key');
+        $this->registerConfig();
 
         // Register the main class to use with the facade
         $this->app->singleton('laravel-simple-api-key', function () {
             return new LaravelSimpleApiKey;
         });
 
+        $this->registerFacade();
+    }
+
+    protected function registerMigrations(){
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
+
+    protected function registerFacade(){
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('SimpleApiKey', "Kustomrt\\LaravelSimpleApiKey\\LaravelSimpleApiKeyFacade");
+    }
+
+    protected function registerConfig(){
+        // Automatically apply the package configuration
+        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'laravel-simple-api-key');
+    }
+
+
+    /**
+     * @throws BindingResolutionException
+     */
+    protected function configureMiddleware(){
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('auth.apikey', LaravelSimpleApiKeyMiddleware::class);
     }
 }
