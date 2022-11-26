@@ -2,13 +2,20 @@
 
 namespace Kustomrt\LaravelSimpleApiKey;
 
+use Illuminate\Support\Str;
+use Kustomrt\LaravelSimpleApiKey\Models\ApiKey;
+use Kustomrt\LaravelSimpleApiKey\Models\ApiKeyAccessLog;
+
 class LaravelSimpleApiKey
 {
-    /**
-     * @return string
-     */
-    public function beNice(): string
+    public function create(string $name): NewApiKey
     {
-        return "Hello World";
+        /** @var ApiKey $apiKey */
+        $apiKey = ApiKey::query()->create([
+            'name' => $name,
+            'key' => hash('sha256', $plainTextApiKey = Str::random(40))
+        ]);
+
+        return new NewApiKey($apiKey, "$apiKey->id|$plainTextApiKey");
     }
 }
