@@ -5,6 +5,7 @@ namespace Kustomrt\LaravelSimpleApiKey;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Kustomrt\LaravelSimpleApiKey\Console\Commands\DeleteApiKey;
 use Kustomrt\LaravelSimpleApiKey\Console\Commands\GenerateApiKey;
 use Kustomrt\LaravelSimpleApiKey\Console\Commands\ListApiKeys;
 use Kustomrt\LaravelSimpleApiKey\Http\Middleware\LaravelSimpleApiKeyMiddleware;
@@ -50,7 +51,8 @@ class LaravelSimpleApiKeyServiceProvider extends ServiceProvider
             // Registering package commands.
             $this->commands([
                 GenerateApiKey::class,
-                ListApiKeys::class
+                DeleteApiKey::class,
+                ListApiKeys::class,
             ]);
         }
 
