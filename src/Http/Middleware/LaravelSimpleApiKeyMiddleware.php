@@ -11,7 +11,7 @@ class LaravelSimpleApiKeyMiddleware
     public function handle(Request $request, Closure $next)
     {
         // Api Key is missing
-        abort_unless($key = $request->bearerToken(), 401);
+        abort_unless($key = $request->header('X-API-Key'), 401);
 
         // Check if Api Key is valid
         $apiKey = ApiKey::isValid($key);
