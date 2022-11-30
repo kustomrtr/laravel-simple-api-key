@@ -13,7 +13,6 @@ class GenerateApiKey extends Command
      * Error messages
      */
     const MESSAGE_ERROR_INVALID_NAME_FORMAT = 'Invalid name.  Must be a lowercase alphabetic characters, numbers and hyphens less than 255 characters long.';
-    const MESSAGE_ERROR_NAME_ALREADY_USED   = 'Name is unavailable.';
 
     /**
      * The name and signature of the console command.
