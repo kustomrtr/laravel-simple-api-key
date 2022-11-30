@@ -13,7 +13,7 @@ class ListApiKeys extends Command
      *
      * @var string
      */
-    protected $signature = 'apikey:list';
+    protected $signature = 'apikey:list {--D|deleted}';
 
     /**
      * The console command description.
@@ -27,9 +27,11 @@ class ListApiKeys extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
-        $apiKeys = ApiKey::withTrashed()->get();
+        $apiKeys = $this->option('deleted')
+        ? ApiKey::withTrashed()->orderBy('name')->get()
+        : ApiKey::query()->orderBy('name')->get();
 
         if(!$apiKeys->count()){
             $this->warn('There are no API keys. To generate one run "php artisan apikey:generate api_key_name_here".');
@@ -37,9 +39,10 @@ class ListApiKeys extends Command
             return CommandAlias::SUCCESS;
         }
 
-        $headers = ['Name', 'Last Used', 'Created', 'Status'];
+        $headers = ['ID', 'Name', 'Last Used', 'Created', 'Status'];
         $rows = $apiKeys->map(function($apiKey){
             return [
+                $apiKey->id,
                 $apiKey->name,
                 $this->lastUsedAt($apiKey),
                 $apiKey->created_at,
@@ -58,6 +61,6 @@ class ListApiKeys extends Command
             return "$apiKey->last_used_at ($ago)";
         }
 
-        return 'unused';
+        return 'never';
     }
 }
