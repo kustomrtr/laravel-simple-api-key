@@ -28,6 +28,9 @@ class ApiKey extends Model
     ];
     protected static string $nameRegex = '/^[a-z0-9-]{1,255}$/';
 
+    const ACTION_DELETE = 'DELETE';
+    const ACTION_CREATE = 'CREATE';
+
     /**
      * Prune soft-deleted api keys after 30 days
      *
@@ -66,26 +69,46 @@ class ApiKey extends Model
     {
         parent::boot();
 
+        static::created(function(ApiKey $apiKey){
+            static::logActionEvent($apiKey, static::ACTION_CREATE);
+        });
+
         // API Key is only updated on 'last_access_at' so for every update we'll create an access log entry
         static::updated(function(ApiKey $apiKey){
-            info("API Key $apiKey->id accessed. Creating access log entry");
+            static::logAccessEvent($apiKey);
+        });
 
-            /** @var ApiKeyAccessLog $apiKeyAccessLog */
-            $apiKeyAccessLog = ApiKeyAccessLog::query()->create([
-                'api_key_id' => $apiKey->id,
-                'ip_address' => request()->ip(),
-                'url' => request()->fullUrl()
-            ]);
-
-            info("Access log entry for API Key $apiKey->id was successfully created ($apiKeyAccessLog->id)");
+        // Store log for deleted API Key
+        static::deleted(function(ApiKey $apiKey){
+            static::logActionEvent($apiKey, static::ACTION_DELETE);
         });
     }
 
-    protected static function logActionEvent(){
+    protected static function logActionEvent(ApiKey $apiKey, string $action){
+        $action = [
+            'api_key_id' => $apiKey->id,
+            'ip_address' => request()->ip(),
+            'action' => $action
+        ];
+
+        info("API Key $apiKey->id is being deleted", $action);
+
+        ApiKeyActionLog::query()->create($action);
+
+        info("API Key $apiKey->id was deleted");
 
     }
 
-    protected static function logAccessEvent(){
+    protected static function logAccessEvent(ApiKey $apiKey){
+        info("API Key $apiKey->id accessed. Creating access log entry");
 
+        /** @var ApiKeyAccessLog $apiKeyAccessLog */
+        $apiKeyAccessLog = ApiKeyAccessLog::query()->create([
+            'api_key_id' => $apiKey->id,
+            'ip_address' => request()->ip(),
+            'url' => request()->fullUrl()
+        ]);
+
+        info("Access log entry for API Key $apiKey->id was successfully created ($apiKeyAccessLog->id)");
     }
 }

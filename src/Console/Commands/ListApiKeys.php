@@ -55,7 +55,8 @@ class ListApiKeys extends Command
         return CommandAlias::SUCCESS;
     }
 
-    public function lastUsedAt(ApiKey $apiKey){
+    public function lastUsedAt(ApiKey $apiKey): string
+    {
         if($apiKey->last_used_at){
             $ago = $apiKey->last_used_at->diffForHumans();
             return "$apiKey->last_used_at ($ago)";
